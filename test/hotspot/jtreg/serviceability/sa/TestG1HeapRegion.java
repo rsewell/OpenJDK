@@ -59,7 +59,7 @@ public class TestG1HeapRegion {
         try {
             agent.attach(Integer.parseInt(pid));
             G1CollectedHeap heap = (G1CollectedHeap)VM.getVM().getUniverse().heap();
-            G1HeapRegion hr = heap.hrm().heapRegionIterator().next();
+            G1HeapRegion hr = heap.hrm().g1HeapRegionIterator().next();
             G1HeapRegion hrTop = heap.hrm().getByAddress(hr.top());
 
             Asserts.assertEquals(hr.top(), hrTop.top(),

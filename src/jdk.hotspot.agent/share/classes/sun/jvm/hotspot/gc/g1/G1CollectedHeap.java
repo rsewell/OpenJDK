@@ -110,12 +110,12 @@ public class G1CollectedHeap extends CollectedHeap {
         return VMObjectFactory.newObject(HeapRegionSetBase.class, humongousSetAddr);
     }
 
-    private Iterator<G1HeapRegion> heapRegionIterator() {
-        return hrm().heapRegionIterator();
+    private Iterator<G1HeapRegion> g1HeapRegionIterator() {
+        return hrm().g1HeapRegionIterator();
     }
 
     public void heapRegionIterate(HeapRegionClosure hrcl) {
-        Iterator<G1HeapRegion> iter = heapRegionIterator();
+        Iterator<G1HeapRegion> iter = g1HeapRegionIterator();
         while (iter.hasNext()) {
             G1HeapRegion hr = iter.next();
             hrcl.doHeapRegion(hr);
@@ -123,7 +123,7 @@ public class G1CollectedHeap extends CollectedHeap {
     }
 
     public G1HeapRegion heapRegionForAddress(Address addr) {
-        Iterator<G1HeapRegion> iter = heapRegionIterator();
+        Iterator<G1HeapRegion> iter = g1HeapRegionIterator();
         while (iter.hasNext()) {
             G1HeapRegion hr = iter.next();
             if (hr.isInRegion(addr)) {
@@ -139,7 +139,7 @@ public class G1CollectedHeap extends CollectedHeap {
 
     @Override
     public void liveRegionsIterate(LiveRegionsClosure closure) {
-        Iterator<G1HeapRegion> iter = heapRegionIterator();
+        Iterator<G1HeapRegion> iter = g1HeapRegionIterator();
         while (iter.hasNext()) {
             G1HeapRegion hr = iter.next();
             closure.doLiveRegions(hr);

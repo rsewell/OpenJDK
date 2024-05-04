@@ -70,8 +70,8 @@ public class HeapRegionManager extends VMObject {
         return regions().length();
     }
 
-    public Iterator<G1HeapRegion> heapRegionIterator() {
-        return regions().heapRegionIterator(length());
+    public Iterator<G1HeapRegion> g1HeapRegionIterator() {
+        return regions().g1HeapRegionIterator(length());
     }
 
     public HeapRegionManager(Address addr) {
