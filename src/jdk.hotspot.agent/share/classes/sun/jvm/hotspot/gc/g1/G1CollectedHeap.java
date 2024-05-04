@@ -122,7 +122,7 @@ public class G1CollectedHeap extends CollectedHeap {
         }
     }
 
-    public G1HeapRegion heapRegionForAddress(Address addr) {
+    public G1HeapRegion g1HeapRegionForAddress(Address addr) {
         Iterator<G1HeapRegion> iter = g1HeapRegionIterator();
         while (iter.hasNext()) {
             G1HeapRegion hr = iter.next();
