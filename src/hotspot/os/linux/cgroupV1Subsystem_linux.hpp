@@ -32,22 +32,8 @@
 // Cgroups version 1 specific implementation
 
 class CgroupV1Controller: public CgroupController {
-  private:
-    /* mountinfo contents */
-    char *_root;
-    char *_mount_point;
-    /* Constructed subsystem directory */
-    char *_path;
-
   public:
-    CgroupV1Controller(char *root, char *mountpoint) {
-      _root = os::strdup(root);
-      _mount_point = os::strdup(mountpoint);
-      _path = nullptr;
-    }
-
-    virtual void set_subsystem_path(char *cgroup_path);
-    char *subsystem_path() { return _path; }
+    CgroupV1Controller(const char *root, const char *mountpoint) : CgroupController(root, mountpoint) {}
 };
 
 class CgroupV1MemoryController: public CgroupV1Controller, public CgroupMemoryController {
@@ -133,12 +119,13 @@ class CgroupV1Subsystem: public CgroupSubsystem {
                       CgroupV1CpuController* cpu,
                       CgroupV1Controller* cpuacct,
                       CgroupV1Controller* pids,
-                      CgroupV1MemoryController* memory) {
+                      CgroupV1Controller* memory) {
       _cpuset = cpuset;
       _cpu = new CachingCgroupController<CgroupCpuController*>(cpu);
       _cpuacct = cpuacct;
       _pids = pids;
       _memory = new CachingCgroupController<CgroupMemoryController*>(memory);
+      initialize_hierarchy();
     }
 };
 

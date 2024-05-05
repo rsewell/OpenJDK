@@ -320,15 +320,6 @@ void CgroupV2Subsystem::print_version_specific_info(outputStream* st) {
   OSContainer::print_container_helper(st, swap_limit, "memory_swap_max_limit_in_bytes");
 }
 
-char* CgroupV2Controller::construct_path(char* mount_path, char *cgroup_path) {
-  stringStream ss;
-  ss.print_raw(mount_path);
-  if (strcmp(cgroup_path, "/") != 0) {
-    ss.print_raw(cgroup_path);
-  }
-  return os::strdup(ss.base());
-}
-
 char* CgroupV2Subsystem::pids_max_val() {
   char pidsmax[1024];
   int err = cg_file_contents_ctrl(static_cast<CgroupV2Controller*>(_unified), "/pids.max", "%1023s", pidsmax);

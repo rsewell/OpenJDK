@@ -68,12 +68,12 @@ static void delete_file(const char* filename) {
 
 class TestController : public CgroupController {
 private:
-  char* _path;
+  const char* _path;
 public:
-  TestController(char *p) {
+  TestController(const char *p) {
     _path = p;
   }
-  char* subsystem_path() override {
+  const char* subsystem_path() override {
     return _path;
   };
 };
