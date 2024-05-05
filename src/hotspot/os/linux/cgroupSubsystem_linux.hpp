@@ -289,7 +289,7 @@ class CgroupCpuController: public CgroupController {
     virtual int cpu_quota() = 0;
     virtual int cpu_period() = 0;
     virtual int cpu_shares() = 0;
-    virtual char *subsystem_path() = 0;
+    virtual const char *subsystem_path() = 0;
 };
 
 class CgroupMemoryController: public CgroupController {
@@ -302,7 +302,7 @@ class CgroupMemoryController: public CgroupController {
     virtual jlong memory_max_usage_in_bytes() = 0;
     virtual jlong rss_usage_in_bytes() = 0;
     virtual jlong cache_usage_in_bytes() = 0;
-    virtual char *subsystem_path() = 0;
+    virtual const char *subsystem_path() = 0;
 };
 
 

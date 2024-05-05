@@ -40,7 +40,7 @@ class CgroupV1MemoryController: public CgroupV1Controller, public CgroupMemoryCo
 
   public:
     bool is_hierarchical() { return _uses_mem_hierarchy; }
-    void set_subsystem_path(char *cgroup_path);
+    void set_subsystem_path(const char *cgroup_path);
     jlong read_memory_limit_in_bytes(julong upper_bound);
     jlong memory_usage_in_bytes();
     jlong memory_and_swap_limit_in_bytes(julong host_mem, julong host_swap);
@@ -52,7 +52,7 @@ class CgroupV1MemoryController: public CgroupV1Controller, public CgroupMemoryCo
     jlong kernel_memory_usage_in_bytes();
     jlong kernel_memory_limit_in_bytes(julong host_mem);
     jlong kernel_memory_max_usage_in_bytes();
-    char *subsystem_path() override { return CgroupV1Controller::subsystem_path(); }
+    const char *subsystem_path() override { return CgroupV1Controller::subsystem_path(); }
   private:
     /* Some container runtimes set limits via cgroup
      * hierarchy. If set to true consider also memory.stat
