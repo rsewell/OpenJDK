@@ -71,8 +71,6 @@
 
 class CgroupController: public CHeapObj<mtInternal> {
   protected:
-    void set_path(const char *cgroup_path);
-
     /* mountinfo contents */
     char *_root;
     char *_mount_point;
@@ -90,10 +88,10 @@ class CgroupController: public CHeapObj<mtInternal> {
       os::free(_path);
     }
 
-    bool trim_path(size_t dir_count);
+    virtual bool trim_path(size_t dir_count) { return false; }
     virtual const char *subsystem_path() { return _path; }
 
-    virtual void set_subsystem_path(const char *cgroup_path);
+    void set_subsystem_path(const char *cgroup_path);
 };
 
 PRAGMA_DIAG_PUSH
@@ -284,7 +282,7 @@ class CachingCgroupController : public CHeapObj<mtInternal> {
     T controller() { return _controller; }
 };
 
-class CgroupCpuController: public CgroupController {
+class CgroupCpuController {
   public:
     virtual int cpu_quota() = 0;
     virtual int cpu_period() = 0;
@@ -292,7 +290,9 @@ class CgroupCpuController: public CgroupController {
     virtual const char *subsystem_path() = 0;
 };
 
-class CgroupMemoryController: public CgroupController {
+class CgroupMemoryController : virtual public CgroupController {
+  protected:
+    void set_path(const char *cgroup_path);
   public:
     virtual jlong read_memory_limit_in_bytes(julong upper_bound) = 0;
     virtual jlong memory_usage_in_bytes() = 0;
@@ -303,6 +303,7 @@ class CgroupMemoryController: public CgroupController {
     virtual jlong rss_usage_in_bytes() = 0;
     virtual jlong cache_usage_in_bytes() = 0;
     virtual const char *subsystem_path() = 0;
+    virtual bool trim_path(size_t dir_count);
 };
 
 

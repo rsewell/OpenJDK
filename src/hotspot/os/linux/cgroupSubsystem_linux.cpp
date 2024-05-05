@@ -40,7 +40,7 @@
 static const char* cg_controller_name[] = { "cpu", "cpuset", "cpuacct", "memory", "pids" };
 
 CgroupSubsystem* CgroupSubsystemFactory::create() {
-  CgroupV1Controller* memory = nullptr;
+  CgroupV1MemoryController* memory = nullptr;
   CgroupV1Controller* cpuset = nullptr;
   CgroupV1CpuController* cpu = nullptr;
   CgroupV1Controller* cpuacct = nullptr;
@@ -103,7 +103,7 @@ CgroupSubsystem* CgroupSubsystemFactory::create() {
     CgroupInfo info = cg_infos[i];
     if (info._data_complete) { // pids controller might have incomplete data
       if (strcmp(info._name, "memory") == 0) {
-        memory = new CgroupV1Controller(info._root_mount_path, info._mount_path);
+        memory = new CgroupV1MemoryController(info._root_mount_path, info._mount_path);
         memory->set_subsystem_path(info._cgroup_path);
       } else if (strcmp(info._name, "cpuset") == 0) {
         cpuset = new CgroupV1Controller(info._root_mount_path, info._mount_path);
@@ -580,7 +580,7 @@ void CgroupController::set_subsystem_path(const char *cgroup_path) {
   trim_path(0);
 }
 
-void CgroupController::set_path(const char *cgroup_path) {
+void CgroupMemoryController::set_path(const char *cgroup_path) {
   __attribute__((unused)) bool _cgroup_path; // Do not use the member variable.
   stringStream ss;
   if (_root == nullptr || cgroup_path == nullptr) {
@@ -621,7 +621,7 @@ void CgroupController::set_path(const char *cgroup_path) {
  *    whether dir_count was < number of _cgroup_path directories
  *    false is returned if the result would be cgroup root directory
  */
-bool CgroupController::trim_path(size_t dir_count) {
+bool CgroupMemoryController::trim_path(size_t dir_count) {
   char *cgroup_path = os::strdup(_cgroup_path);
   assert(cgroup_path[0] == '/', "_cgroup_path should start with a slash ('/')");
   while (dir_count--) {
@@ -639,14 +639,15 @@ bool CgroupController::trim_path(size_t dir_count) {
 }
 
 void CgroupSubsystem::initialize_hierarchy() {
-  CgroupController *memory = memory_controller()->controller();
+  CgroupMemoryController *memory = memory_controller()->controller();
 
   size_t best_level = 0;
   jlong memory_limit_min = max_jlong;
   jlong memory_swap_limit_min = max_jlong;
+  jlong phys_mem = os::Linux::physical_memory();
 
   for (size_t dir_count = 0; memory->trim_path(dir_count); ++dir_count) {
-    jlong memory_limit = read_memory_limit_in_bytes();
+    jlong memory_limit = memory->read_memory_limit_in_bytes(phys_mem);
     if (memory_limit != -1 && memory_limit != OSCONTAINER_ERROR && memory_limit < memory_limit_min) {
       memory_limit_min = memory_limit;
       best_level = dir_count;
