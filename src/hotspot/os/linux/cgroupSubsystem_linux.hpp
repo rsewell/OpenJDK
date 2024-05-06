@@ -71,6 +71,8 @@
 
 class CgroupController: public CHeapObj<mtInternal> {
   protected:
+    void set_path(const char *cgroup_path);
+
     /* mountinfo contents */
     char *_root;
     char *_mount_point;
@@ -88,7 +90,7 @@ class CgroupController: public CHeapObj<mtInternal> {
       os::free(_path);
     }
 
-    virtual bool trim_path(size_t dir_count) { return false; }
+    bool trim_path(size_t dir_count);
     virtual const char *subsystem_path() { return _path; }
 
     void set_subsystem_path(const char *cgroup_path);
@@ -291,8 +293,6 @@ class CgroupCpuController {
 };
 
 class CgroupMemoryController : virtual public CgroupController {
-  protected:
-    void set_path(const char *cgroup_path);
   public:
     virtual jlong read_memory_limit_in_bytes(julong upper_bound) = 0;
     virtual jlong memory_usage_in_bytes() = 0;
@@ -303,7 +303,6 @@ class CgroupMemoryController : virtual public CgroupController {
     virtual jlong rss_usage_in_bytes() = 0;
     virtual jlong cache_usage_in_bytes() = 0;
     virtual const char *subsystem_path() = 0;
-    virtual bool trim_path(size_t dir_count);
 };
 
 

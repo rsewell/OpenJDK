@@ -70,7 +70,7 @@ class TestController : public CgroupController {
 private:
   const char* _path;
 public:
-  TestController(const char *p) {
+  TestController(const char *p) : CgroupController("" /*root*/, "" /*mountpoint*/) {
     _path = p;
   }
   const char* subsystem_path() override {
@@ -215,7 +215,7 @@ TEST(cgroupTest, cg_file_contents_impl) {
 }
 
 TEST(cgroupTest, cg_file_contents_ctrl_null) {
-  TestController* null_path_controller = new TestController((char*)nullptr);
+  TestController* null_path_controller = new TestController(nullptr);
   const char* test_file_path = "/not-used";
   const char* scan_fmt = "%d";
   int a = -1;
@@ -228,7 +228,7 @@ TEST(cgroupTest, cg_file_contents_ctrl_null) {
   EXPECT_EQ(err, OSCONTAINER_ERROR) << "Null subsystem path should be an error";
   EXPECT_EQ(-1, a) << "Expected untouched scan value";
   // null scan_fmt, null return pointer
-  TestController* test_controller = new TestController((char*)"/something");
+  TestController* test_controller = new TestController("/something");
   err = cg_file_contents_ctrl<int*>(test_controller, test_file_path, nullptr, &a);
   EXPECT_EQ(err, OSCONTAINER_ERROR) << "Null scan format should be an error";
   err = cg_file_contents_ctrl<int*>(test_controller, test_file_path, scan_fmt, nullptr);
@@ -251,7 +251,7 @@ TEST(cgroupTest, cg_file_contents_ctrl_beyond_max_path) {
 }
 
 TEST(cgroupTest, cg_file_contents_ctrl_file_not_exist) {
-  TestController* unknown_path_ctrl = new TestController((char*)"/do/not/exist");
+  TestController* unknown_path_ctrl = new TestController("/do/not/exist");
   const char* test_file_path = "/file-not-found";
   const char* scan_fmt = "/not-used";
   const char* ret_val[2] = { "/one", "/two" };
@@ -261,7 +261,7 @@ TEST(cgroupTest, cg_file_contents_ctrl_file_not_exist) {
 }
 
 TEST(cgroupTest, cg_file_multi_line_ctrl_null) {
-  TestController* null_path_controller = new TestController((char*)nullptr);
+  TestController* null_path_controller = new TestController(nullptr);
   const char* test_file_path = "/not-used";
   const char* scan_fmt = "%d";
   const char* key = "something";
@@ -275,7 +275,7 @@ TEST(cgroupTest, cg_file_multi_line_ctrl_null) {
   EXPECT_EQ(err, OSCONTAINER_ERROR) << "Null subsystem path should be an error";
   EXPECT_EQ(-1, a) << "Expected untouched scan value";
   // null key, null scan_fmt, null return pointer
-  TestController* test_controller = new TestController((char*)"/something");
+  TestController* test_controller = new TestController("/something");
   err = cg_file_multi_line_ctrl<int*>(test_controller, test_file_path, nullptr, scan_fmt, &a);
   EXPECT_EQ(err, OSCONTAINER_ERROR) << "Null key should be an error";
   err = cg_file_multi_line_ctrl<int*>(test_controller, test_file_path, key, nullptr, &a);
@@ -301,7 +301,7 @@ TEST(cgroupTest, cg_file_multi_line_ctrl_beyond_max_path) {
 }
 
 TEST(cgroupTest, cg_file_multi_line_ctrl_file_not_exist) {
-  TestController* unknown_path_ctrl = new TestController((char*)"/do/not/exist");
+  TestController* unknown_path_ctrl = new TestController("/do/not/exist");
   const char* test_file_path = "/file-not-found";
   const char* scan_fmt = "/not-used";
   const char* key = "something";
@@ -328,9 +328,9 @@ TEST(cgroupTest, set_cgroupv1_subsystem_path) {
   TestCase* testCases[] = { &host,
                             &container_engine };
   for (int i = 0; i < length; i++) {
-    CgroupV1Controller* ctrl = new CgroupV1Controller( (char*)testCases[i]->root_path,
-                                                       (char*)testCases[i]->mount_path);
-    ctrl->set_subsystem_path((char*)testCases[i]->cgroup_path);
+    CgroupV1Controller* ctrl = new CgroupV1Controller( testCases[i]->root_path,
+                                                       testCases[i]->mount_path);
+    ctrl->set_subsystem_path(testCases[i]->cgroup_path);
     ASSERT_STREQ(testCases[i]->expected_path, ctrl->subsystem_path());
   }
 }
@@ -338,13 +338,13 @@ TEST(cgroupTest, set_cgroupv1_subsystem_path) {
 TEST(cgroupTest, set_cgroupv2_subsystem_path) {
   TestCase at_mount_root = {
     "/sys/fs/cgroup",       // mount_path
-    nullptr,                // root_path, ignored
+    "/",                    // root_path
     "/",                    // cgroup_path
     "/sys/fs/cgroup"        // expected_path
   };
   TestCase sub_path = {
     "/sys/fs/cgroup",       // mount_path
-    nullptr,                // root_path, ignored
+    "/",                    // root_path
     "/foobar",              // cgroup_path
     "/sys/fs/cgroup/foobar" // expected_path
   };
@@ -352,8 +352,9 @@ TEST(cgroupTest, set_cgroupv2_subsystem_path) {
   TestCase* testCases[] = { &at_mount_root,
                             &sub_path };
   for (int i = 0; i < length; i++) {
-    CgroupV2Controller* ctrl = new CgroupV2Controller( (char*)testCases[i]->mount_path,
-                                                       (char*)testCases[i]->cgroup_path);
+    CgroupV2Controller* ctrl = new CgroupV2Controller( testCases[i]->root_path,
+                                                       testCases[i]->mount_path);
+    ctrl->set_subsystem_path(testCases[i]->cgroup_path);
     ASSERT_STREQ(testCases[i]->expected_path, ctrl->subsystem_path());
   }
 }

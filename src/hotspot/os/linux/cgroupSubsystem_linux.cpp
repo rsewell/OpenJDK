@@ -580,7 +580,7 @@ void CgroupController::set_subsystem_path(const char *cgroup_path) {
   trim_path(0);
 }
 
-void CgroupMemoryController::set_path(const char *cgroup_path) {
+void CgroupController::set_path(const char *cgroup_path) {
   __attribute__((unused)) bool _cgroup_path; // Do not use the member variable.
   stringStream ss;
   if (_root == nullptr || cgroup_path == nullptr) {
@@ -621,7 +621,7 @@ void CgroupMemoryController::set_path(const char *cgroup_path) {
  *    whether dir_count was < number of _cgroup_path directories
  *    false is returned if the result would be cgroup root directory
  */
-bool CgroupMemoryController::trim_path(size_t dir_count) {
+bool CgroupController::trim_path(size_t dir_count) {
   char *cgroup_path = os::strdup(_cgroup_path);
   assert(cgroup_path[0] == '/', "_cgroup_path should start with a slash ('/')");
   while (dir_count--) {
