@@ -151,6 +151,7 @@ public class NestedCgroup {
             }
             sysFsCgroup = matcher.group(1);
             isCgroup2 = matcher.group(2) != null;
+            System.err.println("isCgroup2 = " + isCgroup2);
 
             System.err.println(LINE_DELIM + " " + (isCgroup2 ? "cgroup2" : "cgroup1") + " mount point: " + sysFsCgroup);
             memory_max_filename = isCgroup2 ? "memory.max" : "memory.limit_in_bytes";
