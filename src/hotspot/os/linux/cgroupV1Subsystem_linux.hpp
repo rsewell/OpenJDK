@@ -39,7 +39,6 @@ class CgroupV1Controller: virtual public CgroupController {
 class CgroupV1MemoryController: public CgroupV1Controller, public CgroupMemoryController {
 
   public:
-    bool is_hierarchical() { return _uses_mem_hierarchy; }
     jlong read_memory_limit_in_bytes(julong upper_bound);
     jlong memory_usage_in_bytes();
     jlong memory_and_swap_limit_in_bytes(julong host_mem, julong host_swap);
@@ -55,18 +54,14 @@ class CgroupV1MemoryController: public CgroupV1Controller, public CgroupMemoryCo
     virtual void set_subsystem_path(const char *cgroup_path) override;
   private:
     /* Some container runtimes set limits via cgroup
-     * hierarchy. If set to true consider also memory.stat
+     * hierarchy. Consider also memory.stat
      * file if everything else seems unlimited */
-    bool _uses_mem_hierarchy;
-    jlong uses_mem_hierarchy();
-    void set_hierarchical(bool value) { _uses_mem_hierarchy = value; }
+    void check_mem_hierarchy();
     jlong read_mem_swappiness();
     jlong read_mem_swap(julong host_total_memsw);
 
   public:
-    CgroupV1MemoryController(char *root, char *mountpoint) : CgroupController(root, mountpoint), CgroupV1Controller(root, mountpoint) {
-      _uses_mem_hierarchy = false;
-    }
+    CgroupV1MemoryController(char *root, char *mountpoint) : CgroupController(root, mountpoint), CgroupV1Controller(root, mountpoint) {}
 
 };
 

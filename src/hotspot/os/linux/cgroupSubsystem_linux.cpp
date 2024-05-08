@@ -641,27 +641,20 @@ bool CgroupController::trim_path(size_t dir_count) {
 void CgroupSubsystem::initialize_hierarchy() {
   CgroupMemoryController *memory = memory_controller()->controller();
 
-  size_t best_level = 0;
-  jlong memory_limit_min = max_jlong;
-  jlong memory_swap_limit_min = max_jlong;
   jlong phys_mem = os::Linux::physical_memory();
 
+  // Here it ignores any possible lower limit in parent directories.
+  // Linux kernel will correctly consider both that but this code does not.
   for (size_t dir_count = 0; memory->trim_path(dir_count); ++dir_count) {
     jlong memory_limit = memory->read_memory_limit_in_bytes(phys_mem);
-    if (memory_limit != -1 && memory_limit != OSCONTAINER_ERROR && memory_limit < memory_limit_min) {
-      memory_limit_min = memory_limit;
-      best_level = dir_count;
-    }
     jlong memory_swap_limit = memory_and_swap_limit_in_bytes();
-    if (memory_swap_limit != -1 && memory_swap_limit != OSCONTAINER_ERROR && memory_swap_limit < memory_swap_limit_min) {
-      memory_swap_limit_min = memory_swap_limit;
-      best_level = dir_count;
-    }
-    // Never use a directory without controller files (disabled by "../cgroup.subtree_control").
-    if (memory_limit == OSCONTAINER_ERROR && memory_swap_limit == OSCONTAINER_ERROR && best_level == dir_count) {
-      ++best_level;
+    if ((memory_limit != -1 && memory_limit != OSCONTAINER_ERROR)
+        || (memory_swap_limit != -1 && memory_swap_limit != OSCONTAINER_ERROR)) {
+      log_trace(os, container)("Final Memory Limit is: " JLONG_FORMAT, memory_limit);
+      log_trace(os, container)("Final Memory and Swap Limit is: " JLONG_FORMAT, memory_swap_limit);
+      return;
     }
   }
 
-  memory->trim_path(best_level);
+  memory->trim_path(0);
 }

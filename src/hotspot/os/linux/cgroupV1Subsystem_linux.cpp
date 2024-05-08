@@ -34,32 +34,31 @@
 #include "utilities/globalDefinitions.hpp"
 #include "os_linux.hpp"
 
-/* uses_mem_hierarchy
+/* check_mem_hierarchy
  *
- * Return whether or not hierarchical cgroup accounting is being
- * done.
- *
- * return:
- *    A number > 0 if true, or
- *    OSCONTAINER_ERROR for not supported
+ * Warn if unsupported non-hierarchical cgroup accounting is being done.
  */
-jlong CgroupV1MemoryController::uses_mem_hierarchy() {
+void CgroupV1MemoryController::check_mem_hierarchy() {
+  static volatile int once = 1;
+  if (Atomic::xchg(&once, 0) == 0) {
+    return;
+  }
+
   jlong use_hierarchy;
   int err = cg_file_contents_ctrl(static_cast<CgroupV1Controller*>(this), "/memory.use_hierarchy", JLONG_FORMAT, &use_hierarchy);
   if (err != 0) {
     log_trace(os, container)("Use Hierarchy is: %d", OSCONTAINER_ERROR);
-    return (jlong)OSCONTAINER_ERROR;
+    return;
   }
   log_trace(os, container)("Use Hierarchy is: " JLONG_FORMAT, use_hierarchy);
-  return use_hierarchy;
+  if (!use_hierarchy) {
+    warning("Non-hierarchical mode (in cgroup v1) is not supported, check \"memory.use_hierarchy\".");
+  }
 }
 
 void CgroupV1MemoryController::set_subsystem_path(const char *cgroup_path) {
   CgroupV1Controller::set_subsystem_path(cgroup_path);
-  jlong hierarchy = uses_mem_hierarchy();
-  if (hierarchy > 0) {
-    set_hierarchical(true);
-  }
+  check_mem_hierarchy();
 }
 
 static inline
@@ -96,24 +95,22 @@ jlong CgroupV1MemoryController::read_memory_limit_in_bytes(julong phys_mem) {
 
   if (memlimit >= phys_mem) {
     log_trace(os, container)("Non-Hierarchical Memory Limit is: Unlimited");
-    if (is_hierarchical()) {
-      julong hier_memlimit;
-      err = cg_file_multi_line_ctrl(static_cast<CgroupV1Controller*>(this), "/memory.stat",
-                                    "hierarchical_memory_limit", JULONG_FORMAT, &hier_memlimit);
-      if (err != 0) {
-        do_trace_log(OSCONTAINER_ERROR, phys_mem);
-        return OSCONTAINER_ERROR;
-      }
-      log_trace(os, container)("Hierarchical Memory Limit is: " JULONG_FORMAT, hier_memlimit);
-      if (hier_memlimit >= phys_mem) {
-        log_trace(os, container)("Hierarchical Memory Limit is: Unlimited");
-      } else {
-        do_trace_log(hier_memlimit, phys_mem);
-        return (jlong)hier_memlimit;
-      }
+    julong hier_memlimit;
+    err = cg_file_multi_line_ctrl(static_cast<CgroupV1Controller*>(this), "/memory.stat",
+                                  "hierarchical_memory_limit", JULONG_FORMAT, &hier_memlimit);
+    if (err != 0) {
+      do_trace_log(OSCONTAINER_ERROR, phys_mem);
+      return OSCONTAINER_ERROR;
     }
-    do_trace_log(memlimit, phys_mem);
-    return (jlong)-1;
+    log_trace(os, container)("Hierarchical Memory Limit is: " JULONG_FORMAT, hier_memlimit);
+    if (hier_memlimit >= phys_mem) {
+      log_trace(os, container)("Hierarchical Memory Limit is: Unlimited");
+      do_trace_log(memlimit, phys_mem);
+      return (jlong)-1;
+    } else {
+      do_trace_log(hier_memlimit, phys_mem);
+      return (jlong)hier_memlimit;
+    }
   } else {
     do_trace_log(memlimit, phys_mem);
     return (jlong)memlimit;
@@ -143,20 +140,18 @@ jlong CgroupV1MemoryController::read_mem_swap(julong host_total_memsw) {
   log_trace(os, container)("Memory and Swap Limit is: " JULONG_FORMAT, memswlimit);
   if (memswlimit >= host_total_memsw) {
     log_trace(os, container)("Non-Hierarchical Memory and Swap Limit is: Unlimited");
-    if (is_hierarchical()) {
-      const char* matchline = "hierarchical_memsw_limit";
-      err = cg_file_multi_line_ctrl(static_cast<CgroupV1Controller*>(this), "/memory.stat", matchline, JULONG_FORMAT, &hier_memswlimit);
-      if (err != 0) {
-        return OSCONTAINER_ERROR;
-      }
-      log_trace(os, container)("Hierarchical Memory and Swap Limit is : " JULONG_FORMAT, hier_memswlimit);
-      if (hier_memswlimit >= host_total_memsw) {
-        log_trace(os, container)("Hierarchical Memory and Swap Limit is: Unlimited");
-      } else {
-        return (jlong)hier_memswlimit;
-      }
+    const char* matchline = "hierarchical_memsw_limit";
+    err = cg_file_multi_line_ctrl(static_cast<CgroupV1Controller*>(this), "/memory.stat", matchline, JULONG_FORMAT, &hier_memswlimit);
+    if (err != 0) {
+      return OSCONTAINER_ERROR;
     }
-    return (jlong)-1;
+    log_trace(os, container)("Hierarchical Memory and Swap Limit is : " JULONG_FORMAT, hier_memswlimit);
+    if (hier_memswlimit >= host_total_memsw) {
+      log_trace(os, container)("Hierarchical Memory and Swap Limit is: Unlimited");
+      return (jlong)-1;
+    } else {
+      return (jlong)hier_memswlimit;
+    }
   } else {
     return (jlong)memswlimit;
   }
