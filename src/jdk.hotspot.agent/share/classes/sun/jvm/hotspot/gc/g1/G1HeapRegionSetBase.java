@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2021, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,11 +37,12 @@ import sun.jvm.hotspot.types.CIntegerField;
 import sun.jvm.hotspot.types.Type;
 import sun.jvm.hotspot.types.TypeDataBase;
 
-// Mirror class for HeapRegionManager.
+// Mirror class for HeapRegionSetBase. Represents a group of regions.
 
-public class HeapRegionManager extends VMObject {
-    // G1HeapRegionTable _regions
-    private static long regionsFieldOffset;
+public class G1HeapRegionSetBase extends VMObject {
+
+    // uint _length
+    private static CIntegerField lengthField;
 
     static {
         VM.registerVMInitializedObserver(new Observer() {
@@ -52,33 +53,16 @@ public class HeapRegionManager extends VMObject {
     }
 
     private static synchronized void initialize(TypeDataBase db) {
-        Type type = db.lookupType("HeapRegionManager");
+        Type type = db.lookupType("HeapRegionSetBase");
 
-        regionsFieldOffset = type.getField("_regions").getOffset();
-    }
-
-    private G1HeapRegionTable regions() {
-        Address regionsAddr = addr.addOffsetTo(regionsFieldOffset);
-        return VMObjectFactory.newObject(G1HeapRegionTable.class, regionsAddr);
-    }
-
-    public long capacity() {
-        return length() * G1HeapRegion.grainBytes();
+        lengthField = type.getCIntegerField("_length");
     }
 
     public long length() {
-        return regions().length();
+        return lengthField.getValue(addr);
     }
 
-    public Iterator<G1HeapRegion> g1HeapRegionIterator() {
-        return regions().g1HeapRegionIterator(length());
-    }
-
-    public HeapRegionManager(Address addr) {
+    public G1HeapRegionSetBase(Address addr) {
         super(addr);
-    }
-
-    public G1HeapRegion getByAddress(Address addr) {
-      return regions().getByAddress(addr);
     }
 }

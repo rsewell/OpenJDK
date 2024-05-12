@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2021, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,12 +37,11 @@ import sun.jvm.hotspot.types.CIntegerField;
 import sun.jvm.hotspot.types.Type;
 import sun.jvm.hotspot.types.TypeDataBase;
 
-// Mirror class for HeapRegionSetBase. Represents a group of regions.
+// Mirror class for HeapRegionManager.
 
-public class HeapRegionSetBase extends VMObject {
-
-    // uint _length
-    private static CIntegerField lengthField;
+public class G1HeapRegionManager extends VMObject {
+    // G1HeapRegionTable _regions
+    private static long regionsFieldOffset;
 
     static {
         VM.registerVMInitializedObserver(new Observer() {
@@ -53,16 +52,33 @@ public class HeapRegionSetBase extends VMObject {
     }
 
     private static synchronized void initialize(TypeDataBase db) {
-        Type type = db.lookupType("HeapRegionSetBase");
+        Type type = db.lookupType("HeapRegionManager");
 
-        lengthField = type.getCIntegerField("_length");
+        regionsFieldOffset = type.getField("_regions").getOffset();
+    }
+
+    private G1HeapRegionTable regions() {
+        Address regionsAddr = addr.addOffsetTo(regionsFieldOffset);
+        return VMObjectFactory.newObject(G1HeapRegionTable.class, regionsAddr);
+    }
+
+    public long capacity() {
+        return length() * G1HeapRegion.grainBytes();
     }
 
     public long length() {
-        return lengthField.getValue(addr);
+        return regions().length();
     }
 
-    public HeapRegionSetBase(Address addr) {
+    public Iterator<G1HeapRegion> heapRegionIterator() {
+        return regions().heapRegionIterator(length());
+    }
+
+    public G1HeapRegionManager(Address addr) {
         super(addr);
+    }
+
+    public G1HeapRegion getByAddress(Address addr) {
+      return regions().getByAddress(addr);
     }
 }

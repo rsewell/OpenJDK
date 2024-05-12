@@ -120,7 +120,7 @@ public class PointerFinder {
       // If we are using the G1CollectedHeap, find out which region the address is in
       if (heap instanceof G1CollectedHeap) {
         G1CollectedHeap g1 = (G1CollectedHeap)heap;
-        loc.hr = g1.g1HeapRegionForAddress(a);
+        loc.hr = g1.heapRegionForAddress(a);
         // We don't assert that loc.hr is not null like we do for the SerialHeap. This is
         // because heap.isIn(a) can return true if the address is anywhere in G1's mapped
         // memory, even if that area of memory is not in use by a G1HeapRegion. So there

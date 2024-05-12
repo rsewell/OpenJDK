@@ -125,7 +125,7 @@ public class G1HeapRegionTable extends VMObject {
         }
     }
 
-    public Iterator<G1HeapRegion> g1HeapRegionIterator(long committedLength) {
+    public Iterator<G1HeapRegion> heapRegionIterator(long committedLength) {
         return new G1HeapRegionIterator(committedLength);
     }
 

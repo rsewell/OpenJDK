@@ -24,6 +24,6 @@
 
 package sun.jvm.hotspot.gc.g1;
 
-public interface HeapRegionClosure {
+public interface G1HeapRegionClosure {
     public void doHeapRegion(G1HeapRegion hr);
 }
