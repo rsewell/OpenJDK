@@ -181,13 +181,5 @@ main(int argc, char **argv)
         margv = args->elements;
     }
 #endif /* WIN32 */
-    return JLI_Launch(margc, margv,
-                   jargc, (const char**) jargv,
-                   0, NULL,
-                   VERSION_STRING,
-                   DOT_VERSION,
-                   (const_progname != NULL) ? const_progname : *margv,
-                   (const_launcher != NULL) ? const_launcher : *margv,
-                   jargc > 0,
-                   const_cpwildcard, const_javaw, 0);
+    return JLI_Launch(margc, margv, jargc, (const char**) jargv, 0,  NULL, VERSION_STRING, DOT_VERSION,(const_progname != NULL) ? const_progname : *margv, (const_launcher != NULL) ? const_launcher : *margv, jargc > 0, const_cpwildcard, const_javaw, 0);
 }
